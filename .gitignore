@@ -1,0 +1,12 @@
+
+# Generated files that should not be tracked by Git as they are quite large
+bushfire_category_1.geojson
+bushfire_category_2.geojson
+bushfire_category_3.geojson
+bushfire.json
+vic_flood.geojson
+
+# Folders
+figures
+results
+.venv

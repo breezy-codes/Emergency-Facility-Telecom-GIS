@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+
+title: "Telecommunications Accessibility of Hazard-Exposed Facilities: A GIS-Based Analysis of Australian Evacuation Locations"
+
+message: >
+  If you use this repository, datasets, or implementations
+  in academic work, please cite the repository.
+
+type: software
+
+authors:
+  - family-names: "Laird"
+    given-names: "Brianna"
+    affiliation: "Deakin University"
+    orcid: "https://orcid.org/0009-0005-9841-3691"
+
+abstract: >
+  This study examines the telecommunications accessibility of hazard-exposed facilities, focusing on last resort evacuation centres across Australia. We employ a GIS-based approach to analyse the spatial distribution of these facilities and their connectivity to telecommunications infrastructure. With two case studies in Victoria and New South Wales, we assess the exposure of evacuation centres to bushfire and flood hazards, and evaluate their telecommunications accessibility. Our findings highlight significant disparities in connectivity, with many hazard-exposed facilities lacking reliable telecommunications access. This research underscores the critical need for integrating telecommunications infrastructure planning into disaster risk reduction strategies to enhance the safety and resilience of evacuation facilities.
+
+keywords:
+  - Disaster Risk Reduction
+  - Evacuation Planning
+  - GIS Analysis
+  - Telecommunications Accessibility
+  - Hazard Exposure
+  - Geospatial Analysis
+
+license: "GPL-3.0"
+
+repository-code: "https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS"
+
+url: "https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS"
+
+version: "1.0.0"
+
+date-released: 2026-07-08
