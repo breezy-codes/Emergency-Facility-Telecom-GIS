@@ -220,20 +220,38 @@ def add_tower_points(map_object, tower_points):
 
 def build_map(evacuation_points, tower_points, output_path):
     """Build and save the interactive map."""
+
     if not evacuation_points and not tower_points:
         raise ValueError("No evacuation or tower point features were found.")
 
-    center = (
-        evacuation_points[0][0]
-        if evacuation_points
-        else tower_points[0][0]
-    )
+    center = evacuation_points[0][0] if evacuation_points else tower_points[0][0]
 
     map_object = folium.Map(
         location=center,
         zoom_start=5,
-        tiles="cartodbpositron",
+        tiles=None,
     )
+
+    # Refer to docs/basemaps.md for information about available basemaps. This also contains instructions for using CARTO Voyager with a personal API key. As well as explaining recent folium changes that require explicit basemap configuration.
+
+    # OpenStreetMap (default)
+    folium.TileLayer(
+        tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+        name="OpenStreetMap",
+        referrer_policy="strict-origin",
+    ).add_to(map_object)
+
+    # CARTO Voyager
+    # Requires a personal CARTO API key. See docs/basemaps.md.
+    #
+    # folium.TileLayer(
+    #     tiles="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=YOUR_KEY",
+    #     attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    #     subdomains="abcd",
+    #     max_zoom=20,
+    #     name="CARTO Voyager",
+    # ).add_to(map_object)
 
     add_state_boundaries(map_object)
     add_evacuation_points(map_object, evacuation_points)

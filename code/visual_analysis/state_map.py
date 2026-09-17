@@ -264,8 +264,30 @@ def build_map(evacuation_points, tower_points, output_path):
     map_object = folium.Map(
         location=center,
         zoom_start=7,
-        tiles="cartodbpositron",
+        tiles=None,
     )
+
+    # Refer to docs/basemaps.md for information about available basemaps. This also contains instructions for using CARTO Voyager with a personal API key. As well as explaining recent folium changes that require explicit basemap configuration.
+
+    # OpenStreetMap (default)
+    folium.TileLayer(
+        tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+        name="OpenStreetMap",
+        referrer_policy="strict-origin",
+    ).add_to(map_object)
+
+    # CARTO Voyager
+    # Requires a personal CARTO API key. See docs/basemaps.md.
+    #
+    # folium.TileLayer(
+    #     tiles="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=YOUR_KEY",
+    #     attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    #     subdomains="abcd",
+    #     max_zoom=20,
+    #     name="CARTO Voyager",
+    # ).add_to(map_object)
+
 
     add_state_boundary(
         map_object,
