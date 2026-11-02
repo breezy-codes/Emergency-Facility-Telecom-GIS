@@ -62,6 +62,15 @@ const FIRE_PROBABILITIES = Dict(
 # Define the states considered in the analysis
 const STATES = ("NSW", "VIC", "SA")
 
+# Define the mapping of state names to their codes for consistent referencing
+const STATE_CODES = Dict(
+    "NEW SOUTH WALES" => "NSW",
+    "VICTORIA" => "VIC",
+    "SOUTH AUSTRALIA" => "SA"
+)
+
+_state_code(value) = (name = uppercase(strip(string(value))); get(STATE_CODES, name, name))
+
 # Define the hazards considered in the analysis
 const HAZARDS = ("fire", "flood", "earthquake")
 
