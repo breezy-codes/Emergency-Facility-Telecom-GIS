@@ -12,13 +12,13 @@ using StatsPlots
 using Measures
 
 include("config.jl")
-include("helper_functions.jl")
+include("analysis/helper_functions.jl")
 
-include("probability_model.jl")
-include("spatial_analysis.jl")
+include("analysis/probability_model.jl")
+include("analysis/spatial_analysis.jl")
 
-include("plot_results.jl")
-include("paper_results.jl")
+include("analysis/plot_results.jl")
+include("analysis/paper_results.jl")
 
 # The following 2 lines prevent it from showing popup windows for each plot.
 ENV["GKSwstype"] = "nul"  # Use the GR backend for plotting

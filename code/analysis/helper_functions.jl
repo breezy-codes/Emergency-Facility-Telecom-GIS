@@ -215,7 +215,7 @@ function load_hazard_rasters(state::AbstractString)
             threshold = nothing,
         ),
         "flood" => (
-            path = state == "TAS" ? joinpath(FLOOD_VIC_PATH, "tas_flood_event_frequency_250m.tif") : nothing,
+            path = state == "TAS" ? joinpath(FLOOD_PATH, "tas_flood_event_frequency_250m.tif") : nothing,
             threshold = 1.0,
         ),
     )

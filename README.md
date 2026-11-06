@@ -1,15 +1,17 @@
 # Telecommunications Accessibility of Australian Evacuation Facilities
 
-> Research software developed by Brianna Laird as part of her PhD research at Deakin University, Australia. The project assesses telecommunications accessibility at evacuation facilities across Australia by integrating geospatial datasets on evacuation locations, telecommunications infrastructure, bushfire hazards, flood hazards, and administrative boundaries.
+> Research software developed by Brianna Laird as part of her PhD research at Deakin University, Australia. This project develops a probabilistic geospatial framework to assess telecommunications accessibility and resilience at evacuation facilities by integrating evacuation locations, telecommunications infrastructure, bushfire and flood hazards, and administrative boundaries.
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue.svg)
 ![Research](https://img.shields.io/badge/research-Deakin%20University-purple)
 
 ## Overview
 
-This repository contains the data collection, preparation, and analysis workflow used to assess telecommunications accessibility at evacuation facilities across Australia.
+This repository contains the data collection, preparation, and analysis framework used to assess telecommunications accessibility and hazard-related vulnerability at evacuation facilities.
 
-The project integrates evacuation facility locations, telecommunications infrastructure, bushfire hazard data, flood hazard data, and administrative boundary datasets to evaluate the spatial relationship between evacuation facilities, hazards, and telecommunications infrastructure. The resulting analyses provide insights into the accessibility of telecommunications services at evacuation locations and identify facilities where hazard exposure coincides with comparatively limited proximity to telecommunications assets.
+Implemented in Julia, the framework integrates geospatial datasets on evacuation facilities, telecommunications infrastructure, natural hazards, and administrative boundaries. It incorporates probabilistic telecommunications coverage and infrastructure failure models to evaluate baseline accessibility, infrastructure redundancy, and service continuity under different deployment scenarios and hazard conditions.
+
+The repository includes the scripts required to collect and prepare datasets, execute the probabilistic model, perform spatial analyses, and generate results, figures, and summary statistics.
 
 ## Citation
 
@@ -21,116 +23,64 @@ GitHub provides a built-in **"Cite this repository"** option via the repository 
 
 ```bibtex
 @software{Laird_Telecommunications_Accessibility_of_2026,
-author = {Laird, Brianna},
-license = {GPL-3.0},
-month = July,
-title = {{Telecommunications Accessibility of Hazard-Exposed Facilities: A GIS-Based Analysis of Australian Evacuation Locations}},
-url = {https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS},
-version = {1.0.0},
-year = {2026}
+    author = {Laird, Brianna},
+    license = {GPL-3.0},
+    month = July,
+    title = {{Telecommunications Accessibility of Hazard-Exposed Facilities: A GIS-Based Analysis of Australian Evacuation Locations}},
+    url = {https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS},
+    version = {1.0.0},
+    year = {2026}
 }
 ```
 
-## Research Objectives
+## Framework Overview
 
-The project addresses the following questions:
-
-* How accessible is telecommunications infrastructure to evacuation facilities across Australia?
-* How does telecommunications accessibility vary between jurisdictions?
-* Which evacuation facilities are located within bushfire-prone or flood-prone areas?
-* Among hazard-exposed evacuation facilities, which locations exhibit comparatively poor proximity to telecommunications infrastructure?
-* How can spatial analysis support resilience planning and infrastructure investment decisions?
-
-## Repository Structure
-
-The repository is organised into the following directories:
-
-> 📂 **[last-resort-GIS-comparison](.)/**
-> - 📄 [README.md](README.md)
-> - 📁 [code](code)/
->   - 📁 [analysis](code/analysis)/
->     - 🐍 [bushfire\_evac\_celltower.py](code/analysis/bushfire_evac_celltower.py)
->     - 🐍 [bushfire\_vs\_evacuation.py](code/analysis/bushfire_vs_evacuation.py)
->     - 🐍 [colocation\_statistics.py](code/analysis/colocation_statistics.py)
->     - 🐍 [data\_overview.py](code/analysis/data_overview.py)
->     - 🐍 [flood\_evac\_celltower.py](code/analysis/flood_evac_celltower.py)
->     - 🐍 [flood\_vs\_evacuation.py](code/analysis/flood_vs_evacuation.py)
->     - 🐍 [nearest\_neighbour\_proximity.py](code/analysis/nearest_neighbour_proximity.py)
->   - 📁 [data\_preparation](code/data_preparation)/
->     - 🐍 [NT\_scrape.py](code/data_preparation/NT_scrape.py)
->     - 🐍 [cell\_tower\_sanitising.py](code/data_preparation/cell_tower_sanitising.py)
->     - 🐍 [collect\_cell\_towers.py](code/data_preparation/collect_cell_towers.py)
->     - 🐍 [collect\_flood\_zones.py](code/data_preparation/collect_flood_zones.py)
->     - 💻 [download\_evacuation\_data.sh](code/data_preparation/download_evacuation_data.sh)
->     - 🐍 [process\_bushfire\_zones.py](code/data_preparation/process_bushfire_zones.py)
->     - 🐍 [process\_flood\_zones.py](code/data_preparation/process_flood_zones.py)
->     - 🐍 [state\_boundaries.py](code/data_preparation/state_boundaries.py)
->   - 📁 [visual\_analysis](code/visual_analysis)/
->     - 🐍 [NSW_bushfire_sample.py](code/visual_analysis/NSW_bushfire_sample.py)
->     - 🐍 [country\_map.py](code/visual_analysis/country_map.py)
->     - 🐍 [state\_map.py](code/visual_analysis/state_map.py)
-> - 📁 [data](data)/
-> - 📁 [docs](docs)/
->   - 📄 [analysis\_workflow.md](docs/analysis_workflow.md)
->   - 📄 [data\_management.md](docs/data_management.md)
-> - 📁 [figures](figures)/
-> - 📁 [maps](maps)/
->   - 🌐 [country\_map.html](maps/country_map.html)
-> - 📁 [results](results)/
-
-## Methodology
-
-The workflow consists of four primary stages:
+The framework consists of three primary stages.
 
 ### 1. Data Collection
 
-Datasets are obtained from publicly available government and telecommunications sources, including:
+The framework uses publicly available datasets from government agencies and telecommunications data providers, including:
 
-* Australian evacuation facility datasets.
-* Telecommunications infrastructure datasets.
-* Bushfire hazard datasets.
-* Flood hazard datasets.
-* Administrative boundary datasets.
+- Evacuation facility locations.
+- Telecommunications infrastructure locations.
+- Bushfire hazard datasets.
+- Flood hazard datasets.
+- Administrative boundaries.
 
-Detailed instructions are provided in [data management](docs/data_management.md).
+Data acquisition involves a combination of automated collection scripts and manual downloads from external data providers. Detailed instructions, source links, and acquisition procedures are provided in [Data Management](docs/data_management.md).
 
 ### 2. Data Preparation
 
-Collected datasets are cleaned, standardised, transformed, and integrated into a common geospatial framework suitable for national-scale analysis.
+Collected datasets are placed in the repository's `data/` directory. The setup workflow processes the downloaded and collected data into the formats required by the analysis framework.
 
-Preparation scripts include:
+Preparation includes:
 
-* Evacuation facility processing.
-* Telecommunications infrastructure processing.
-* Bushfire hazard processing.
-* Flood hazard processing.
-* Administrative boundary generation.
+- Cleaning and standardising source datasets.
+- Processing evacuation facility and telecommunications infrastructure locations.
+- Preparing bushfire and flood hazard data.
+- Generating and processing administrative boundaries.
+- Integrating datasets into a common geospatial framework.
 
-### 3. Spatial Analysis
+### 3. Probabilistic Modelling and Spatial Analysis
 
-The analysis workflow evaluates:
+The main analysis framework integrates the prepared datasets to evaluate telecommunications accessibility and resilience at evacuation facilities.
 
-* Telecommunications proximity to evacuation facilities.
-* Telecommunications colocation statistics.
-* Bushfire exposure of evacuation facilities.
-* Flood exposure of evacuation facilities.
-* Telecommunications accessibility of hazard-exposed facilities.
+The analyses include:
 
-Detailed descriptions of each analysis script are provided in [analysis workflow](docs/analysis_workflow.md).
+- Probabilistic 4G and 5G telecommunications coverage.
+- Telecommunications infrastructure redundancy.
+- Hazard-dependent infrastructure and facility failure probabilities.
+- Telecommunications service continuity and cutoff risk.
+- Facility-level vulnerability assessments.
+- Spatial comparisons across deployment scenarios, jurisdictions, and analysis periods.
 
-### 4. Visualisation and Reporting
+The framework generates CSV files containing analysis results and figures for visualisation and reporting.
 
-Analysis outputs are used to generate:
+## Installation and Requirements
 
-* Summary statistics.
-* Jurisdiction-level comparisons.
-* Hazard exposure assessments.
-* Telecommunications accessibility maps.
-* Spatial resilience planning visualisations.
+The framework is implemented in Julia. Install Julia and the required project dependencies before running the analysis.
 
-## Quick Start
-
-### Clone the Repository
+Clone the repository:
 
 ```bash
 git clone https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS.git
@@ -138,44 +88,57 @@ git clone https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS.git
 cd Emergency-Facility-Telecom-GIS
 ```
 
-### Set Up the Python Environment
+Install the project dependencies using Julia's package manager:
 
-Create a virtual environment for the project:
-
-```bash
-python -m venv .venv
+```julia
+using Pkg
+Pkg.instantiate()
 ```
 
-Activate the virtual environment:
+## Running the Framework
+
+The framework is executed in two main stages.
+
+### 1. Data Collection and Preparation
+
+First, follow the instructions in [docs/data_management.md](docs/data_management.md) to download the datasets that require manual acquisition.
+
+Place the downloaded datasets in the appropriate locations within the repository's `data/` directory, following the documented directory structure.
+
+Then execute:
 
 ```bash
-source .venv/bin/activate
+julia run_setup.jl
 ```
 
-Install the required Python packages:
+This script automatically collects the datasets supported by the automated collection workflow and processes the available source data into the formats required by the analysis framework.
+
+**Important:** Datasets requiring manual download must be obtained and placed in the appropriate `data/` directories before running the setup script.
+
+### 2. Execute the Analysis Framework
+
+Once data collection and preparation are complete, run:
 
 ```bash
-pip install -r requirements.txt
+julia main.jl
 ```
 
-The virtual environment contains the project-specific dependencies and keeps them isolated from other Python installations.
+The main script executes the complete analysis workflow, including:
 
-### Collect and Prepare Data
+- Loading and integrating the prepared datasets.
+- Applying the probabilistic telecommunications coverage and infrastructure failure models.
+- Performing the geospatial analysis.
+- Evaluating facility-level accessibility and resilience measures.
+- Generating summary statistics and visualisations.
 
-Follow the instructions contained in [docs/data_management.md](docs/data_management.md) to obtain and prepare the necessary datasets.
-
-### Run Analyses
-
-Follow the workflow described in [docs/analysis_workflow.md](docs/analysis_workflow.md) to execute the analysis scripts in the correct sequence.
+Analysis outputs, including CSV result files and figures, are saved to the repository's results directory.
 
 ## Data Availability
 
-The repository does not redistribute source datasets.
+Source datasets are not redistributed within this repository. They are obtained from publicly available government and telecommunications data providers and may be subject to individual licensing and attribution requirements.
 
-Many source datasets are provided by external government agencies and may be subject to licensing, attribution, or redistribution requirements. To ensure users obtain the most current versions of the data and to maintain compliance with source licensing conditions, datasets must be obtained directly from their original providers.
-
-Scripts and documentation are provided to reproduce the complete data collection and preparation workflow.
+The repository provides data acquisition scripts, source links, and instructions for manually downloading datasets. The `run_setup.jl` script automates the collection and preparation steps supported by the workflow.
 
 ## Reproducibility
 
-All code required to reproduce the analyses presented in the associated publication is included within this repository. Provided the source datasets are obtained and processed according to the documented workflow, users should be able to reproduce all reported analyses, figures, and summary statistics using the Python environment specified in `requirements.txt`.
+All Julia code required to execute the framework is provided in this repository. By obtaining the source datasets, following the documented data preparation instructions, and executing `run_setup.jl` followed by `main.jl`, users can reproduce the probabilistic modelling, spatial analyses, CSV outputs, and figures generated by the study.

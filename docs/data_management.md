@@ -1,117 +1,52 @@
 # Data Collection and Preparation
 
-This document describes the steps required to obtain and prepare all datasets used in the analysis. Source datasets are not redistributed within this repository. Instead, users should obtain data directly from the original providers and use the supplied scripts to reproduce the complete data preparation workflow.
+This document describes how to obtain and prepare the datasets required by the analysis framework. Source datasets are not redistributed within this repository. Instead, data are obtained directly from their original providers using the supplied download scripts and processing workflows.
 
-## Evacuation Facility Data
+## 1. Manual Data Download
 
-### Tasmania, New South Wales, Victoria, and Northern Territory
+One dataset requires manual download: the Victorian flood dataset.
 
-Evacuation facility data for Tasmania, New South Wales, Victoria, and the Northern Territory can be collected by running:
+Download the dataset from the [Victorian DataShare portal](https://datashare.maps.vic.gov.au/search?q=uuid%3Dd817f3be-a7a2-5847-9944-c0f2fdb39444).
 
-```bash
-bash code/data_preparation/download_evacuation_data.sh
-```
+After downloading, place the dataset in the appropriate location within the repository's `data/` directory, following the expected directory structure.
 
-This script downloads:
+## 2. Data Collection and Preparation
 
-* Tasmania Neighbourhood Safer Places
-* New South Wales Neighbourhood Safer Places
-* Victoria Bushfire Places of Last Resort
-* Northern Territory shelter location information
-
-This script also creates all of the necessary data directories for storing the raw and processed datasets.
-
-### Northern Territory Post-Processing
-
-The Northern Territory shelter data is downloaded as an HTML page and must be converted into a machine-readable format using:
+After downloading and placing the Victorian flood dataset in the appropriate location, execute the Julia setup script from the repository root:
 
 ```bash
-python code/data_preparation/NT_scrape.py
+julia run_setup.jl
 ```
 
-### South Australia
+This script automatically executes `code/data_preparation/download_data.sh` to collect the evacuation facility and hazard datasets, then processes and prepares the collected data into the formats required by the analysis framework.
 
-The South Australian Bushfire Last Resort Refuges dataset must be downloaded manually from:
+Once the script completes successfully, all required datasets will be available for analysis.
 
-<https://data.sa.gov.au/data/dataset/bushfire-last-resort-refuges>
+## 3. Running the Analysis
 
-After downloading, place the dataset in the `data/evacuation_datasets` directory.
+Once data collection and preparation are complete, all required datasets will be available for analysis.
 
-## Telecommunications Infrastructure Data
-
-Cell tower data can be collected and processed using:
+Execute the main framework using:
 
 ```bash
-python code/data_preparation/collect_cell_towers.py
-python code/data_preparation/cell_tower_sanitising.py
+julia main.jl
 ```
 
-The collection script retrieves the source telecommunications infrastructure data, while the sanitisation script performs cleaning and standardisation required for subsequent analysis.
-
----
-
-## Bushfire Hazard Data
-
-Bushfire hazard data can be downloaded from:
-
-<https://portal.spatial.nsw.gov.au/client/services?id=84c338fe2e8c49a9836751ed49c9c581>
-
-After downloading the source dataset, place it in the `data/raw` directory and process it using:
-
-```bash
-python code/data_preparation/process_bushfire_zones.py
-```
-
----
-
-## Flood Hazard Data
-
-Flood hazard data can be collected using:
-
-```bash
-python code/data_preparation/collect_flood_zones.py
-```
-
-After collection, process the dataset using:
-
-```bash
-python code/data_preparation/process_flood_zones.py
-```
-
----
-
-## Administrative Boundaries
-
-Australian state and territory boundary data can be collected using:
-
-```bash
-python code/data_preparation/state_boundaries.py
-```
-
----
+This runs the probabilistic modelling and geospatial analysis workflow, generating the resulting CSV files and figures.
 
 ## Recommended Workflow
 
-The recommended order of execution is:
+The complete workflow is:
 
 ```bash
-# Evacuation facilities
-bash code/data_preparation/download_evacuation_data.sh
-python code/data_preparation/NT_scrape.py
+# 1. Manually download the Victorian flood dataset
+#    https://datashare.maps.vic.gov.au/search?q=uuid%3Dd817f3be-a7a2-5847-9944-c0f2fdb39444
 
-# Cell towers
-python code/data_preparation/collect_cell_towers.py
-python code/data_preparation/cell_tower_sanitising.py
+# 2. Collect the remaining datasets and prepare all datasets
+julia run_setup.jl
 
-# Flood data
-python code/data_preparation/collect_flood_zones.py
-python code/data_preparation/process_flood_zones.py
-
-# Bushfire data
-python code/data_preparation/process_bushfire_zones.py
-
-# State boundaries
-python code/data_preparation/state_boundaries.py
+# 3. Execute the analysis framework
+julia main.jl
 ```
 
-Once all datasets have been collected and processed, the repository will contain the required inputs for reproducing the analysis and figures presented in the study.
+Once these steps are complete, the repository will contain all required datasets and will be ready to reproduce the analyses and figures presented in the study.
