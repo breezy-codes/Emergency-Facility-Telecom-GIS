@@ -81,3 +81,9 @@ function analyse_facility(facility_id, assets::AbstractDataFrame, asset_exposure
         flood_redundancy_aware_risk_score=get(redundancy_aware_risks, "flood", missing)
     )
 end
+
+analysis = run_spatial_analysis(
+    asset_conditional_failure_probabilities=ASSET_FAILURE_PROBABILITIES,
+    facility_conditional_failure_probabilities=FACILITY_FAILURE_PROBABILITIES,
+)
+
