@@ -173,3 +173,222 @@ function load_results(; include_telco=false)
 
     return (facilities=df, telco_assets=telco)
 end
+
+"""
+    save_accessibility_latex_table(results::AbstractDataFrame)
+
+Saves a LaTeX table comparing the physical accessibility of evacuation facilities to telecommunications assets, and the percentage of facilities within coverage range by state and scenario.
+Used within the paper to present the results of the accessibility analysis.
+"""
+function save_accessibility_latex_table(results::AbstractDataFrame)
+    output_file = joinpath(PLOT_PAPER_DIR, "state_accessibility_comparison.tex")
+    required = [:state, :facility_id, :scenario, :nearest_asset_distance_m, :within_range]
+    missing_cols = setdiff(required, Symbol.(names(results)))
+    isempty(missing_cols) || error("Missing columns: $(join(string.(missing_cols), ", ")).")
+    all(state -> haskey(STATE_HAZARDS, state), STATES) || error("STATE_HAZARDS must define every state in STATES.")
+
+    d = select(results, required)
+    d.state = uppercase.(strip.(string.(d.state)))
+    d.scenario = titlecase.(strip.(string.(d.scenario)))
+    d.nearest_asset_distance_m = [ismissing(x) || isnothing(x) ? NaN : x isa Real ? Float64(x) : something(tryparse(Float64, strip(string(x))), NaN) for x in d.nearest_asset_distance_m]
+    d = filter(r -> r.state in STATES && r.scenario in titlecase.(string.(SCENARIO_ORDER)) && isfinite(r.nearest_asset_distance_m) && !ismissing(r.within_range), d)
+    unique!(d, [:state, :facility_id, :scenario])
+
+    physical = combine(groupby(d, :state), :facility_id => (x -> length(unique(x))) => :num_facilities, :nearest_asset_distance_m => median => :median_distance_m)
+    coverage = combine(groupby(d, [:state, :scenario]), :within_range => (x -> 100 * mean(Bool.(x))) => :within_range_pct)
+    coverage_wide = unstack(coverage, :state, :scenario, :within_range_pct)
+
+    open(output_file, "w") do io
+        println(io, raw"\begin{table}[ht]")
+        println(io, raw"\centering")
+        println(io, raw"\small")
+        println(io, raw"\caption{Physical accessibility of evacuation facilities to telecommunications assets.}")
+        println(io, raw"\label{tab:physical_accessibility}")
+        println(io, raw"\begin{tabular}{lrr}")
+        println(io, raw"\hline")
+        println(io, raw"\textbf{State} & \textbf{Facilities} & \textbf{Median nearest-asset distance (m)} \\\\")
+        println(io, raw"\hline")
+
+        for state in STATES
+            rows = filter(:state => ==(state), physical)
+            isempty(rows) && continue
+            r = first(rows)
+            println(io, "$(state) & $(r.num_facilities) & $(round(r.median_distance_m; digits=1)) \\\\")
+        end
+
+        println(io, raw"\hline")
+        println(io, raw"\end{tabular}")
+        println(io, raw"\end{table}")
+        println(io, "")
+        println(io, raw"\begin{table}[ht]")
+        println(io, raw"\centering")
+        println(io, raw"\caption{Percentage of evacuation facilities within telecommunications coverage range by state and scenario.}")
+        println(io, raw"\label{tab:scenario_coverage}")
+        println(io, raw"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}l" * repeat("r", length(SCENARIO_ORDER)) * "}")
+        println(io, raw"\hline")
+
+        print(io, raw"\textbf{State}")
+        for scenario in SCENARIO_ORDER
+            print(io, " & \\textbf{", titlecase(string(scenario)), "}")
+        end
+        println(io, raw" \\\\")
+        println(io, raw"\hline")
+
+        for state in STATES
+            rows = filter(:state => ==(state), coverage_wide)
+            isempty(rows) && continue
+            r = first(rows)
+
+            print(io, state)
+
+            for scenario in SCENARIO_ORDER
+                col = Symbol(titlecase(string(scenario)))
+                value = col in propertynames(coverage_wide) ? r[col] : missing
+
+                if ismissing(value)
+                    print(io, " & --")
+                else
+                    colour = value < 45 ? "coverageLow" :
+                             value < 75 ? "coverageModerate" :
+                             value < 90 ? "coverageGood" :
+                             "coverageExcellent"
+
+                    formatted = "$(round(value; digits=2))\\%"
+                    print(io, " & \\coverage{", colour, "}{", formatted, "}")
+                end
+            end
+
+            println(io, raw" \\\\")
+        end
+
+        println(io, raw"\hline")
+        println(io, raw"\end{tabular*}")
+        println(io, raw"\vspace{5pt}")
+
+        # Coverage classification legend
+        println(io, raw"\noindent\makebox[\textwidth][c]{%")
+        println(io, raw"\scriptsize")
+        println(io, raw"\tikz[baseline=-0.5ex]\node[fill=coverageLow, minimum width=0.25cm, minimum height=0.18cm, inner sep=0pt] {};%")
+        println(io, raw"\hspace{3pt}Low (<45\%)%")
+        println(io, raw"\hspace{18pt}%")
+        println(io, raw"\tikz[baseline=-0.5ex]\node[fill=coverageModerate, minimum width=0.25cm, minimum height=0.18cm, inner sep=0pt] {};%")
+        println(io, raw"\hspace{3pt}Moderate (45--74.99\%)%")
+        println(io, raw"\hspace{18pt}%")
+        println(io, raw"\tikz[baseline=-0.5ex]\node[fill=coverageGood, minimum width=0.25cm, minimum height=0.18cm, inner sep=0pt] {};%")
+        println(io, raw"\hspace{3pt}Good (75--89.99\%)%")
+        println(io, raw"\hspace{18pt}%")
+        println(io, raw"\tikz[baseline=-0.5ex]\node[fill=coverageExcellent, minimum width=0.25cm, minimum height=0.18cm, inner sep=0pt] {};%")
+        println(io, raw"\hspace{3pt}Excellent ($\geq$90\%)%")
+        println(io, raw"}")
+        println(io, raw"\end{table}")
+    end
+    @info "Saved accessibility LaTeX tables" output_file
+    return nothing
+end
+
+
+"""
+    save_baseline_coverage_figures(df::AbstractDataFrame=load_results())
+
+Saves figures comparing the baseline coverage probabilities of evacuation facilities by state and scenario, and the distributions of facility-level coverage probabilities.
+Used within the paper to present the results of the baseline coverage analysis.
+"""
+function save_baseline_coverage_figures(df::AbstractDataFrame=load_results())
+    required = [:facility_id, :scenario, :state, :analysis_period_years, :normal_coverage_probability]
+    missing_cols = setdiff(required, Symbol.(names(df)))
+    isempty(missing_cols) || error("Missing columns: $(join(missing_cols, ", "))")
+
+    d = DataFrame(df)
+
+    # Restrict analysis to one-year results.
+    d.analysis_period_years = Int.(d.analysis_period_years)
+    filter!(r -> r.analysis_period_years == 1, d)
+    isempty(d) && error("No one-year results available for baseline coverage figures.")
+
+    # Normalise categorical columns.
+    d.scenario = titlecase.(strip.(string.(d.scenario)))
+    d.state = uppercase.(strip.(string.(d.state)))
+
+    # Convert coverage probabilities to Float64.
+    d.normal_coverage_probability = [
+        ismissing(x) ? NaN :
+        x isa Real ? Float64(x) :
+        something(tryparse(Float64, strip(string(x))), NaN)
+        for x in d.normal_coverage_probability
+    ]
+
+    filter!(r -> isfinite(r.normal_coverage_probability) && 0 <= r.normal_coverage_probability <= 1, d)
+    isempty(d) && error("No valid one-year coverage probabilities available for plotting.")
+
+    # Retain one result per facility, scenario and state.
+    unique!(d, [:facility_id, :scenario, :state])
+
+    scenarios = titlecase.(string.(SCENARIO_ORDER))
+    scenario_labels = string.(SCENARIO_ORDER)
+    state_colours = [:steelblue, :darkorange, :seagreen, :firebrick]
+    scenario_colours = [:steelblue, :darkorange, :seagreen, :firebrick, :mediumpurple, :goldenrod]
+
+    # Identify scenarios by their generation labels.
+    scenarios_4g = filter(s -> occursin("4G", s), scenarios)
+    scenarios_5g = filter(s -> occursin("5G", s), scenarios)
+
+    function geographic_plot(generation_scenarios, generation)
+        p = plot(;
+            xlabel="",
+            ylabel=generation == "4G" ? "Mean facility coverage probability" : "",
+            xlims=(0.7, length(generation_scenarios) + 0.3),
+            ylims=(0, 1),
+            guidefontsize=17,
+            xticks=(1:length(generation_scenarios), [scenario_labels[findfirst(==(s), scenarios)] for s in generation_scenarios]),
+            xrotation=15,
+            legend=:bottomright,
+            grid=:y,
+            size=(750, 650),
+            left_margin=1Plots.mm,
+            bottom_margin=0Plots.mm,
+            right_margin=0Plots.mm,
+            top_margin=1Plots.mm
+        )
+
+        for (j, state) in enumerate(STATES)
+            means = Float64[]
+            positions = Int[]
+
+            for (i, scenario) in enumerate(generation_scenarios)
+                vals = d[(d.scenario .== scenario) .& (d.state .== state), :normal_coverage_probability]
+                filter!(isfinite, vals)
+                isempty(vals) && continue
+                push!(positions, i)
+                push!(means, mean(vals))
+            end
+
+            isempty(means) && continue
+            plot!(p, positions, means; label=state, color=state_colours[mod1(j, length(state_colours))], marker=:circle, markersize=5, linewidth=2)
+        end
+
+        return p
+    end
+
+    p4g = geographic_plot(scenarios_4g, "4G")
+    p5g = geographic_plot(scenarios_5g, "5G")
+    p_geographic = plot(p4g, p5g; layout=grid(1, 2), size=(1500, 600), left_margin=8Plots.mm, bottom_margin=8Plots.mm, right_margin=0Plots.mm, top_margin=2Plots.mm)
+    xlabel_panel = plot(; framestyle=:none, grid=false, xaxis=false, yaxis=false, bottom_margin=0Plots.mm, top_margin=0Plots.mm, annotations=[(0.5, 0.5, text("Deployment scenario", 17, :center))])
+    p_geographic = plot(p_geographic, xlabel_panel; layout=grid(2, 1, heights=[0.97, 0.03]), size=(1500, 600))
+    savefig(p_geographic, joinpath(PLOT_PAPER_DIR, "baseline_geographic_comparison.png"))
+
+    # Facility-level ECDF: all 4G and 5G scenarios on one figure.
+    p_dist = plot(; xlabel="Facility-level coverage probability", ylabel="Cumulative proportion", xlims=(0, 1), ylims=(0, 1), legend=:bottomright, size=(1300, 600), left_margin=5Plots.mm, bottom_margin=7Plots.mm, right_margin=4Plots.mm, grid=true)
+
+    for (i, scenario) in enumerate(scenarios)
+        vals = sort(filter(isfinite, d[d.scenario .== scenario, :normal_coverage_probability]))
+        isempty(vals) && continue
+        label = scenario_labels[findfirst(==(scenario), scenarios)]
+        plot!(p_dist, vals, (1:length(vals)) ./ length(vals); seriestype=:steppost, label=label, color=scenario_colours[mod1(i, length(scenario_colours))], linewidth=2.2)
+    end
+
+    savefig(p_dist, joinpath(PLOT_PAPER_DIR, "baseline_facility_coverage_distributions.png"))
+
+    @info "Saved one-year baseline coverage figures" PLOT_PAPER_DIR facilities=length(unique(d.facility_id)) scenarios=length(unique(d.scenario))
+
+    return (geographic=p_geographic, distributions=p_dist)
+end
