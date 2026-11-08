@@ -322,6 +322,10 @@ function save_baseline_coverage_figures(df::AbstractDataFrame=load_results())
     scenarios_4g = filter(s -> occursin("4G", s), scenarios)
     scenarios_5g = filter(s -> occursin("5G", s), scenarios)
 
+    """
+        geographic_plot(generation_scenarios, generation)
+    Plots the mean facility-level coverage probabilities by state for a given set of deployment scenarios and generation (4G or 5G). Returns the plot object.
+    """
     function geographic_plot(generation_scenarios, generation)
         p = plot(; xlabel="", ylabel=generation == "4G" ? "Mean facility coverage probability" : "", xlims=(0.7, length(generation_scenarios) + 0.3), ylims=(0, 1), guidefontsize=17, xticks=(1:length(generation_scenarios), [scenario_labels[findfirst(==(s), scenarios)] for s in generation_scenarios]), xrotation=15, legend=:bottomright, grid=:y, size=(750, 650), left_margin=1Plots.mm, bottom_margin=0Plots.mm, right_margin=0Plots.mm, top_margin=1Plots.mm)
 
@@ -368,6 +372,11 @@ function save_baseline_coverage_figures(df::AbstractDataFrame=load_results())
     return (geographic=p_geographic, distributions=p_dist)
 end
 
+"""
+    save_hazard_failure_figures(results=load_results(include_telco=true))
+Saves figures comparing the distributions of facility-level and telecommunications asset-level hazard failure probabilities by state and scenario.
+Used within the paper to present the results of the hazard failure analysis.
+"""
 function save_hazard_failure_figures(results=load_results(include_telco=true))
     facility_df = results isa NamedTuple ? results.facilities : results
     telco_df = results isa NamedTuple ? results.telco_assets : nothing
@@ -393,6 +402,10 @@ function save_hazard_failure_figures(results=load_results(include_telco=true))
         return observations
     end
 
+    """
+        plot_hazard_distributions(observations, filename_prefix, xlabel)
+    Plots the distributions of hazard failure probabilities for each hazard, given a DataFrame of observations containing the columns: :asset_id, :state, :analysis_period_years, :hazard, and :probability. The resulting figures are saved to the PLOT_PAPER_DIR with filenames prefixed by `filename_prefix`. The x-axis label is set to `xlabel`.
+    """
     function plot_hazard_distributions(observations, filename_prefix, xlabel)
         figures = Dict{String,Plots.Plot}()
 
