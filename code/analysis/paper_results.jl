@@ -22,8 +22,8 @@ default(
     fontfamily="sans-serif",
     markersize=4,
     titlefontsize=14,
-    guidefontsize=12,       # Axis labels
-    tickfontsize=10,        # Axis tick labels
+    guidefontsize=12,
+    tickfontsize=10,
     legendfontsize=7,
     legendtitlefontsize=10,
     grid=true,
@@ -46,18 +46,12 @@ function load_results(; include_telco=false)
 
     # Validate required columns.
     required = [
-        :facility_id, :state, :facility_name, :scenario,
-        :analysis_period_years, :hazards,
-        :fire_occurrence_probability, :flood_occurrence_probability,
-        :normal_coverage_probability, :no_coverage_probability,
-        :fire_continuity_probability, :flood_continuity_probability,
-        :fire_cutoff_probability, :flood_cutoff_probability,
-        :fire_facility_failure_probability, :flood_facility_failure_probability,
-        :fire_asset_failure_probability, :flood_asset_failure_probability,
-        :fire_effective_asset_count, :flood_effective_asset_count,
-        :fire_redundancy_risk, :flood_redundancy_risk,
-        :fire_joint_risk_probability, :flood_joint_risk_probability,
-        :fire_redundancy_aware_risk_score, :flood_redundancy_aware_risk_score
+        :facility_id, :state, :facility_name, :scenario, :analysis_period_years, :hazards,
+        :fire_occurrence_probability, :flood_occurrence_probability, :normal_coverage_probability, :no_coverage_probability,
+        :fire_continuity_probability, :flood_continuity_probability, :fire_cutoff_probability, :flood_cutoff_probability,
+        :fire_facility_failure_probability, :flood_facility_failure_probability, :fire_asset_failure_probability, :flood_asset_failure_probability,
+        :fire_effective_asset_count, :flood_effective_asset_count, :fire_redundancy_risk, :flood_redundancy_risk,
+        :fire_joint_risk_probability, :flood_joint_risk_probability, :fire_redundancy_aware_risk_score, :flood_redundancy_aware_risk_score
     ]
 
     missing_columns = setdiff(required, Symbol.(names(df)))
@@ -73,14 +67,10 @@ function load_results(; include_telco=false)
 
     # Convert configured metrics and probability columns to Float64.
     probability_metrics = [
-        :fire_occurrence_probability, :flood_occurrence_probability,
-        :normal_coverage_probability, :no_coverage_probability,
-        :fire_continuity_probability, :flood_continuity_probability,
-        :fire_cutoff_probability, :flood_cutoff_probability,
-        :fire_facility_failure_probability, :flood_facility_failure_probability,
-        :fire_asset_failure_probability, :flood_asset_failure_probability,
-        :fire_redundancy_risk, :flood_redundancy_risk,
-        :fire_joint_risk_probability, :flood_joint_risk_probability,
+        :fire_occurrence_probability, :flood_occurrence_probability, :normal_coverage_probability, :no_coverage_probability,
+        :fire_continuity_probability, :flood_continuity_probability, :fire_cutoff_probability, :flood_cutoff_probability,
+        :fire_facility_failure_probability, :flood_facility_failure_probability, :fire_asset_failure_probability, :flood_asset_failure_probability,
+        :fire_redundancy_risk, :flood_redundancy_risk, :fire_joint_risk_probability, :flood_joint_risk_probability,
         :fire_redundancy_aware_risk_score, :flood_redundancy_aware_risk_score
     ]
 
@@ -333,22 +323,7 @@ function save_baseline_coverage_figures(df::AbstractDataFrame=load_results())
     scenarios_5g = filter(s -> occursin("5G", s), scenarios)
 
     function geographic_plot(generation_scenarios, generation)
-        p = plot(;
-            xlabel="",
-            ylabel=generation == "4G" ? "Mean facility coverage probability" : "",
-            xlims=(0.7, length(generation_scenarios) + 0.3),
-            ylims=(0, 1),
-            guidefontsize=17,
-            xticks=(1:length(generation_scenarios), [scenario_labels[findfirst(==(s), scenarios)] for s in generation_scenarios]),
-            xrotation=15,
-            legend=:bottomright,
-            grid=:y,
-            size=(750, 650),
-            left_margin=1Plots.mm,
-            bottom_margin=0Plots.mm,
-            right_margin=0Plots.mm,
-            top_margin=1Plots.mm
-        )
+        p = plot(; xlabel="", ylabel=generation == "4G" ? "Mean facility coverage probability" : "", xlims=(0.7, length(generation_scenarios) + 0.3), ylims=(0, 1), guidefontsize=17, xticks=(1:length(generation_scenarios), [scenario_labels[findfirst(==(s), scenarios)] for s in generation_scenarios]), xrotation=15, legend=:bottomright, grid=:y, size=(750, 650), left_margin=1Plots.mm, bottom_margin=0Plots.mm, right_margin=0Plots.mm, top_margin=1Plots.mm)
 
         for (j, state) in enumerate(STATES)
             means = Float64[]
@@ -391,4 +366,101 @@ function save_baseline_coverage_figures(df::AbstractDataFrame=load_results())
     @info "Saved one-year baseline coverage figures" PLOT_PAPER_DIR facilities=length(unique(d.facility_id)) scenarios=length(unique(d.scenario))
 
     return (geographic=p_geographic, distributions=p_dist)
+end
+
+function save_hazard_failure_figures(results=load_results(include_telco=true))
+    facility_df = results isa NamedTuple ? results.facilities : results
+    telco_df = results isa NamedTuple ? results.telco_assets : nothing
+
+    state_colours = Dict("NSW" => :dodgerblue, "VIC" => :orangered, "SA" => :seagreen, "TAS" => :mediumpurple)
+    periods = [1, 5, 10]
+    distributions = Dict{String,Plots.Plot}()
+    telco_distributions = Dict{String,Plots.Plot}()
+
+    function create_observations(df, probability_columns, asset_column)
+        observations = DataFrame(asset_id=eltype(df[!, asset_column])[], state=String[], analysis_period_years=Int[], hazard=String[], probability=Float64[])
+
+        for (hazard, column) in probability_columns
+            for row in eachrow(df)
+                probability = row[column]
+                ismissing(probability) && continue
+                probability = try Float64(probability) catch; continue end
+                isfinite(probability) && 0 <= probability <= 1 || continue
+                push!(observations, (row[asset_column], uppercase(strip(string(row.state))), Int(row.analysis_period_years), hazard, probability))
+            end
+        end
+
+        return observations
+    end
+
+    function plot_hazard_distributions(observations, filename_prefix, xlabel)
+        figures = Dict{String,Plots.Plot}()
+
+        for hazard in HAZARDS
+            panels = Plots.Plot[]
+
+            for period in periods
+                hazard_data = filter(row -> row.hazard == hazard && row.analysis_period_years == period, observations)
+                p = plot(; title="$period year$(period == 1 ? "" : "s")", xlabel="", ylabel=period == first(periods) ? "Cumulative proportion" : "", xlims=(0, 1), ylims=(0, 1), legend=:bottomright, grid=true)
+
+                if isempty(hazard_data)
+                    annotate!(p, 0.5, 0.5, text("No data available", 10))
+                else
+                    for state in STATES
+                        state_data = filter(:state => ==(state), hazard_data)
+                        isempty(state_data) && continue
+                        all_values = filter(isfinite, state_data.probability)
+                        isempty(all_values) && continue
+                        zero_fraction = 100 * mean(all_values .== 0.0)
+                        values = sort(filter(x -> x > 0, all_values))
+
+                        if isempty(values)
+                            plot!(p, Float64[], Float64[]; label="$state ($(round(zero_fraction, digits=1))% zero)", color=get(state_colours, state, :gray), linewidth=2)
+                            continue
+                        end
+
+                        ecdf_y = collect(1:length(values)) ./ length(values)
+                        plot!(p, values, ecdf_y; seriestype=:steppost, linewidth=2, label="$state ($(round(zero_fraction, digits=1))% zero)", color=get(state_colours, state, :gray))
+                    end
+                end
+
+                push!(panels, p)
+            end
+
+            p3 = plot(panels...; layout=grid(1, 3), size=(2000, 600), left_margin=12Plots.mm, right_margin=3Plots.mm, bottom_margin=4Plots.mm, top_margin=10Plots.mm, plot_title="")
+            xlabel_panel = plot(; framestyle=:none, grid=false, xaxis=false, yaxis=false, bottom_margin=0Plots.mm, top_margin=0Plots.mm, annotations=[(0.5, 0.5, text(xlabel, 22, :center))])
+            figure = plot(p3, xlabel_panel; layout=grid(2, 1, heights=[0.95, 0.05]), size=(2000, 600))
+            savefig(figure, joinpath(PLOT_PAPER_DIR, "$(filename_prefix)_$(hazard)_failure_probability_ecdfs.png"))
+            figures[hazard] = figure
+        end
+
+        return figures
+    end
+
+    # Facility-level asset failure probabilities.
+    facility_required = [:facility_id, :state, :analysis_period_years, :fire_asset_failure_probability, :flood_asset_failure_probability]
+    missing_cols = setdiff(facility_required, Symbol.(names(facility_df)))
+    isempty(missing_cols) || error("Facility results missing columns: $(join(missing_cols, ", "))")
+
+    facility_observations = create_observations(facility_df, Dict("fire" => :fire_asset_failure_probability, "flood" => :flood_asset_failure_probability), :facility_id)
+    isempty(facility_observations) && @warn "No facility-level hazard failure probabilities available for plotting."
+    !isempty(facility_observations) && merge!(distributions, plot_hazard_distributions(facility_observations, "facility", "Mean facility failure probability (non-zero observations)"))
+
+    # Individual telecommunications asset failure probabilities.
+    if !isnothing(telco_df)
+        telco_required = [:asset_id, :state, :hazard, :analysis_period_years, :failure_probability]
+        missing_telco_cols = setdiff(telco_required, Symbol.(names(telco_df)))
+        isempty(missing_telco_cols) || error("Telecommunications asset results missing columns: $(join(missing_telco_cols, ", "))")
+
+        telco_observations = create_observations(telco_df, Dict(hazard => :failure_probability for hazard in HAZARDS), :asset_id)
+        isempty(telco_observations) && @warn "No individual telecommunications asset failure probabilities available for plotting."
+        !isempty(telco_observations) && merge!(telco_distributions, plot_hazard_distributions(telco_observations, "telco_asset", "Individual asset failure probability (non-zero observations)"))
+    else
+        telco_observations = DataFrame()
+        @warn "No telecommunications asset DataFrame supplied; only facility-level figures were generated."
+    end
+
+    @info "Saved hazard failure probability figures" PLOT_PAPER_DIR facility_observations=nrow(facility_observations) telco_observations=nrow(telco_observations)
+
+    return (facility_observations=facility_observations, telco_observations=telco_observations, facility_distributions=distributions, telco_distributions=telco_distributions)
 end
