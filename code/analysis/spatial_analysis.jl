@@ -365,7 +365,10 @@ function analyse_multi_hazard(facilities::AbstractDataFrame, sites::AbstractData
     return result_df
 end
 
-
+"""
+    plot_hazard_raster_facilities(raster, facilities::AbstractDataFrame, state::AbstractString, hazard::AbstractString, longitude_col=:longitude, latitude_col=:latitude, probability_col=Symbol("$(hazard)_probability"), fallback_col=nothing)
+Generate a heatmap plot of the hazard raster for the specified state and hazard, overlaying the locations of the facilities. Facilities are color-coded based on whether they have a valid hazard probability, a fallback probability, or a missing probability. The plot is saved to the figures directory.
+"""
 function plot_hazard_raster_facilities(raster, facilities::AbstractDataFrame, state::AbstractString, hazard::AbstractString, longitude_col=:longitude, latitude_col=:latitude, probability_col=Symbol("$(hazard)_probability"), fallback_col=nothing)
 
     gt = raster.geotransform
@@ -387,18 +390,7 @@ function plot_hazard_raster_facilities(raster, facilities::AbstractDataFrame, st
     # Reverse rows to display increasing northing upwards.
     raster_values = reverse(raster_values, dims=1)
 
-    p = heatmap(
-        x_coords,
-        reverse(y_coords),
-        raster_values;
-        xlabel="Easting (m)",
-        ylabel="Northing (m)",
-        title="$state $hazard probability raster and facilities",
-        colorbar_title="Hazard probability",
-        aspect_ratio=:equal,
-        legend=:outertopright,
-        size=(1100, 850),
-    )
+    p = heatmap(x_coords, reverse(y_coords), raster_values; xlabel="Easting (m)", ylabel="Northing (m)", title="$state $hazard probability raster and facilities", colorbar_title="Hazard probability", aspect_ratio=:equal, legend=:outertopright, size=(1100, 850),)
 
     # Transform facility coordinates into EPSG:3577.
     facility_x = Float64[]
@@ -433,18 +425,10 @@ function plot_hazard_raster_facilities(raster, facilities::AbstractDataFrame, st
 
         isempty(indices) && continue
 
-        scatter!(
-            p,
-            facility_x[indices],
-            facility_y[indices];
-            color=colour,
-            markersize=4,
-            markerstrokewidth=0,
-            label="$label ($(length(indices)))",
-        )
+        scatter!(p, facility_x[indices], facility_y[indices]; color=colour, markersize=4, markerstrokewidth=0, label="$label ($(length(indices)))",)
     end
 
-    output_path = joinpath(PLOT_DIR, "$(lowercase(state))_$(lowercase(hazard))_raster_facilities.png")
+    output_path = joinpath(FIGURES_DIR, "$(lowercase(state))_$(lowercase(hazard))_raster_facilities.png")
     savefig(p, output_path)
 
     @info "Hazard raster facility plot saved" state=state hazard=hazard path=output_path

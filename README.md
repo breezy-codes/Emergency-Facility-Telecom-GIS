@@ -78,9 +78,11 @@ The framework generates CSV files containing analysis results and figures for vi
 
 ## Installation and Requirements
 
-The framework is implemented in Julia. Install Julia and the required project dependencies before running the analysis.
+The framework uses Julia for its primary analysis workflows and Python for selected data collection tasks, including telecommunications infrastructure retrieval. Both environments must be configured before running the framework.
 
-Clone the repository:
+### 1. Clone the Repository
+
+Clone the repository and navigate into the project directory:
 
 ```bash
 git clone https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS.git
@@ -88,12 +90,59 @@ git clone https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS.git
 cd Emergency-Facility-Telecom-GIS
 ```
 
-Install the project dependencies using Julia's package manager:
+### 2. Set Up the Julia Environment
 
-```julia
-using Pkg
-Pkg.instantiate()
+Install [Julia](https://julialang.org/downloads/) if it is not already available.
+
+The repository includes a `Project.toml` and `Manifest.toml` defining the required Julia dependencies. From the repository root, initialise the project environment and install the dependencies:
+
+```bash
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
+
+This activates the project-specific Julia environment and installs the required packages.
+
+### 3. Set Up the Python Environment
+
+Install Python 3 if it is not already available.
+
+Create a local Python virtual environment from the repository root:
+
+```bash
+python3 -m venv .venv
+```
+
+Activate the environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Install the required Python libraries:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+The virtual environment keeps the project's Python dependencies isolated from other Python installations.
+
+Once installation is complete, the environment can be deactivated using:
+
+```bash
+deactivate
+```
+
+The virtual environment does not need to be manually activated when running the setup workflow, provided the setup script invokes the Python executable located in `.venv`.
+
+### 4. System Requirements
+
+Ensure that the required system utilities are installed, including:
+
+- Python 3 and its virtual environment support (`venv`).
+- Julia.
+- `unzip`.
+- Any additional geospatial system dependencies required by the installed Julia and Python packages.
 
 ## Running the Framework
 
@@ -132,6 +181,32 @@ The main script executes the complete analysis workflow, including:
 - Generating summary statistics and visualisations.
 
 Analysis outputs, including CSV result files and figures, are saved to the repository's results directory.
+
+## Viewing Results
+
+The framework generates several outputs during data preparation and analysis. These are saved in the repository's output directories.
+
+### 1. Analysis Outputs
+
+Most analysis outputs are saved under the `results/` directory, including:
+
+- CSV files containing facility-level analysis results and summary statistics.
+- Figures generated during the analysis.
+- Plots used for visualising telecommunications accessibility and resilience.
+
+Hazard raster visualisations are saved separately in the repository's top-level `figures/` directory.
+
+### 2. Interactive Geospatial Map
+
+During `run_setup.jl`, the framework also generates an interactive Folium map displaying the geographic distribution of:
+
+- Australian states and territories.
+- Evacuation facilities.
+- Telecommunications infrastructure assets.
+
+The map allows users to explore the spatial distribution of these datasets interactively.
+
+**Important:** Folium maps need to be served through a local Python HTTP server to render correctly in a browser. Instructions for starting the server and viewing the interactive map are provided in [docs/basemaps.md](docs/basemaps.md).
 
 ## Data Availability
 

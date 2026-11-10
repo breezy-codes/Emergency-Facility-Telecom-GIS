@@ -1,12 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
 
-# Generated files that should not be tracked by Git as they are quite large
-bushfire_category_1.geojson
-bushfire_category_2.geojson
-bushfire_category_3.geojson
-bushfire.json
-vic_flood.geojson
+# Julia
+*.ji/
 
-# Folders
-figures
-results
-.venv
+# Downloaded datasets
+data/raw/*
+data/evacuation_datasets/*
+data/fire_history/*
+data/flood_history/*
+data/telecommunications_datasets/*
+data/boundaries/*

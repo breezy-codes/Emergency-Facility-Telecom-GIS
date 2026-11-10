@@ -12,11 +12,13 @@ const BOUNDARY_DIR = "data/boundaries"
 # Results directories
 const OUTPUT_DIR = "results"
 const ANALYSIS_DIR = "results"
+const FIGURES_DIR = joinpath("figures")
 const PLOT_DIR = joinpath(ANALYSIS_DIR, "plots")
 const PLOT_PAPER_DIR = joinpath(ANALYSIS_DIR, "paper")
 
 mkpath(OUTPUT_DIR)
 mkpath(ANALYSIS_DIR)
+mkpath(FIGURES_DIR)
 mkpath(PLOT_DIR)
 mkpath(PLOT_PAPER_DIR)
 

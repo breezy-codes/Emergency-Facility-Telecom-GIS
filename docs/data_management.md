@@ -1,10 +1,10 @@
 # Data Collection and Preparation
 
-This document describes how to obtain and prepare the datasets required by the analysis framework. Source datasets are not redistributed within this repository. Instead, data are obtained directly from their original providers using the supplied download scripts and processing workflows.
+This document describes how to obtain and prepare the datasets required by the analysis framework. Source datasets are not redistributed within this repository. Instead, datasets are collected directly from their original providers using the supplied download and processing workflows.
 
 ## 1. Manual Data Download
 
-One dataset requires manual download: the Victorian flood dataset.
+One dataset must be downloaded manually: the Victorian flood dataset.
 
 Download the dataset from the [Victorian DataShare portal](https://datashare.maps.vic.gov.au/search?q=uuid%3Dd817f3be-a7a2-5847-9944-c0f2fdb39444).
 
@@ -12,41 +12,46 @@ After downloading, place the dataset in the appropriate location within the repo
 
 ## 2. Data Collection and Preparation
 
-After downloading and placing the Victorian flood dataset in the appropriate location, execute the Julia setup script from the repository root:
+Once the Victorian flood dataset has been downloaded and placed in the appropriate location, execute the setup script from the repository root:
 
 ```bash
 julia run_setup.jl
 ```
 
-This script automatically executes `code/data_preparation/download_data.sh` to collect the evacuation facility and hazard datasets, then processes and prepares the collected data into the formats required by the analysis framework.
+The setup script automates the collection and preparation of the remaining datasets. It orchestrates the supplied Julia and Python scripts, including:
 
-Once the script completes successfully, all required datasets will be available for analysis.
+- **Evacuation facility datasets:** Downloads evacuation facility data from the relevant state providers.
+- **Hazard datasets:** Collects fire and flood history data from the relevant providers.
+- **Telecommunications datasets:** Uses Python scripts to retrieve telecommunications infrastructure data.
+- **Data preparation:** Processes and prepares the collected datasets into the formats required by the analysis framework.
+
+Most data collection and preparation tasks are implemented in Julia, with a small number of Python scripts used for telecommunications data retrieval.
+
+Once the setup script completes successfully, the required datasets will be available for analysis.
 
 ## 3. Running the Analysis
 
-Once data collection and preparation are complete, all required datasets will be available for analysis.
-
-Execute the main framework using:
+After data collection and preparation are complete, execute the main analysis framework from the repository root:
 
 ```bash
 julia main.jl
 ```
 
-This runs the probabilistic modelling and geospatial analysis workflow, generating the resulting CSV files and figures.
+This runs the probabilistic modelling and geospatial analysis workflows, generating the resulting CSV files and figures.
 
 ## Recommended Workflow
 
 The complete workflow is:
 
 ```bash
-# 1. Manually download the Victorian flood dataset
-#    https://datashare.maps.vic.gov.au/search?q=uuid%3Dd817f3be-a7a2-5847-9944-c0f2fdb39444
+# 1. Manually download the Victorian flood dataset and place it
+#    in the appropriate location within data/
 
-# 2. Collect the remaining datasets and prepare all datasets
+# 2. Collect and prepare all remaining datasets
 julia run_setup.jl
 
 # 3. Execute the analysis framework
 julia main.jl
 ```
 
-Once these steps are complete, the repository will contain all required datasets and will be ready to reproduce the analyses and figures presented in the study.
+Once these steps are complete, the repository will contain the required datasets and will be ready to reproduce the analyses and figures presented in the study.

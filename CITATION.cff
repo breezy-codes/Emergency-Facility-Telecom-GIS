@@ -1,10 +1,10 @@
 cff-version: 1.2.0
 
-title: "Telecommunications Accessibility of Hazard-Exposed Facilities: A GIS-Based Analysis of Australian Evacuation Locations"
+title: "Telecommunications Accessibility and Resilience of Australian Evacuation Facilities"
 
 message: >
-  If you use this repository, datasets, or implementations
-  in academic work, please cite the repository.
+  If you use this software, datasets, or implementations
+  in academic work, please cite this repository.
 
 type: software
 
@@ -15,15 +15,21 @@ authors:
     orcid: "https://orcid.org/0009-0005-9841-3691"
 
 abstract: >
-  This study examines the telecommunications accessibility of hazard-exposed facilities, focusing on last resort evacuation centres across Australia. We employ a GIS-based approach to analyse the spatial distribution of these facilities and their connectivity to telecommunications infrastructure. With two case studies in Victoria and New South Wales, we assess the exposure of evacuation centres to bushfire and flood hazards, and evaluate their telecommunications accessibility. Our findings highlight significant disparities in connectivity, with many hazard-exposed facilities lacking reliable telecommunications access. This research underscores the critical need for integrating telecommunications infrastructure planning into disaster risk reduction strategies to enhance the safety and resilience of evacuation facilities.
+  A probabilistic geospatial framework for assessing telecommunications
+  accessibility and resilience at Australian evacuation facilities.
+  The software integrates evacuation facility locations,
+  telecommunications infrastructure, bushfire and flood hazards,
+  and administrative boundaries to evaluate coverage, infrastructure
+  redundancy, and service continuity under different deployment
+  scenarios and hazard conditions.
 
 keywords:
   - Disaster Risk Reduction
   - Evacuation Planning
-  - GIS Analysis
   - Telecommunications Accessibility
-  - Hazard Exposure
+  - Telecommunications Resilience
   - Geospatial Analysis
+  - Probabilistic Modelling
 
 license: "GPL-3.0"
 
@@ -31,6 +37,6 @@ repository-code: "https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS
 
 url: "https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS"
 
-version: "1.0.0"
+version: "1.1.0"
 
-date-released: 2026-07-08
+date-released: 2026-11-11

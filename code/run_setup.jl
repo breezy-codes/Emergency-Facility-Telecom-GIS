@@ -7,10 +7,27 @@ using ArchGDAL
 using DataFrames
 using Downloads
 
+# Create all required directories if they don't exist
+directories = [
+    "data/raw",
+    "data/evacuation_datasets",
+    "data/fire_history",
+    "data/flood_history",
+    "data/telecommunications_datasets",
+    "data/boundaries",
+    "results",
+    "results/figures",
+    "results/plots",
+    "results/paper",
+    "figures",
+    "maps"
+]
 
-cd(@__DIR__) do
-    run(`bash data_preparation/download_data.sh`)
+for directory in directories
+    mkpath(directory)
 end
+
+include("data_preparation/download_data.jl")
 
 const PROJECT_ROOT = normpath(joinpath(@__DIR__, ".."))
 const PYTHON = "python3"
@@ -37,3 +54,6 @@ build_fire_rastors("TAS")
 build_fire_rastors("VIC")
 
 include("data_preparation/flood_history_to_tif.jl")
+
+# Generate interactive country map
+run_python("country_map.py")

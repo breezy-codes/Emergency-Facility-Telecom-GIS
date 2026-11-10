@@ -16,22 +16,30 @@
     ],
     "codeRepository": "https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS",
     "dateCreated": "2026-06-11",
-    "dateModified": "2025-06-20",
+    "dateModified": "2025-11-11",
     "datePublished": "2025-07-06",
-    "description": "A GIS-based framework for assessing telecommunications accessibility at hazard-exposed evacuation facilities.",
+    "description": "A probabilistic geospatial framework for assessing telecommunications accessibility and resilience at Australian evacuation facilities. The software integrates evacuation facility locations, telecommunications infrastructure, bushfire and flood hazards, and administrative boundaries to evaluate coverage, infrastructure redundancy, and service continuity under different deployment scenarios and hazard conditions.",
     "downloadUrl": "https://github.com/breezy-codes/Emergency-Facility-Telecom-GIS/releases",
     "keywords": [
         "Disaster Risk Reduction",
         "Evacuation Planning",
-        "GIS Analysis",
         "Telecommunications Accessibility",
-        "Hazard Exposure",
-        "Geospatial Analysis"
+        "Telecommunications Resilience",
+        "GIS",
+        "Geospatial Analysis",
+        "Probabilistic Modelling",
+        "Infrastructure Redundancy",
+        "Bushfire Risk",
+        "Flood Risk",
+        "Critical Infrastructure"
     ],
     "license": "https://spdx.org/licenses/GPL-3.0",
     "name": "Telecommunications Accessibility of Hazard-Exposed Facilities",
-    "programmingLanguage": "Python",
+    "programmingLanguage": [
+    "Julia",
+    "Python"
+    ],
     "relatedLink": [
     ],
-    "version": "1.0.0"
+    "version": "1.1.0"
 }
