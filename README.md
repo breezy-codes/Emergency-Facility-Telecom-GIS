@@ -4,6 +4,7 @@
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue.svg)
 ![Research](https://img.shields.io/badge/research-Deakin%20University-purple)
+[![DOI](https://zenodo.org/badge/1275838156.svg)](https://doi.org/10.5281/zenodo.24120944)
 
 ## Overview
 
