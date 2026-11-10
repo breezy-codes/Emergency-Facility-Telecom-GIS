@@ -741,7 +741,8 @@ end
 """
     save_geographic_risk_comparison_maps(results::AbstractDataFrame; facilities=facility_coordinates)
 Saves geographic maps comparing the combined risk probability and coverage-aware risk probability for each deployment scenario in the results DataFrame. 
-It compares side by side 
+It compares side by side for each metric.
+Used within the paper to present the results of the geographic risk comparison analysis.
 """
 function save_geographic_risk_comparison_maps(df::AbstractDataFrame; facilities=facility_coordinates)
     state = "NSW"
@@ -870,3 +871,112 @@ function save_geographic_risk_comparison_maps(df::AbstractDataFrame; facilities=
     @info "Saved geographic risk comparison maps" state scenarios hazards analysis_period_years
     return nothing
 end
+
+"""
+    save_redundancy_analysis_plots(df::AbstractDataFrame)
+Saves plots comparing the mean effective asset count and the proportion of facilities achieving at least three effective assets by deployment scenario and hazard for the 1-year analysis period.
+"""
+function save_redundancy_analysis_plots(df::AbstractDataFrame)
+    required = [:state, :scenario, :analysis_period_years, :num_candidate_assets, :fire_effective_asset_count, :flood_effective_asset_count, :fire_redundancy_risk, :flood_redundancy_risk]
+    missing_cols = setdiff(required, propertynames(df))
+    isempty(missing_cols) || error("Missing required columns: $(join(string.(missing_cols), ", "))")
+
+    d = DataFrame(df)
+    d.state = uppercase.(strip.(string.(d.state)))
+    d.scenario = titlecase.(strip.(string.(d.scenario)))
+    d.analysis_period_years = Int.(d.analysis_period_years)
+    filter!(r -> r.analysis_period_years == 1 && r.num_candidate_assets > 0, d)
+
+    if isempty(d)
+        @warn "No facilities with candidate assets available for redundancy analysis."
+        return nothing
+    end
+
+    hazards = ("fire", "flood")
+    hazard_colours = ["#DD82B9", "#A07ECC"]
+    hazard_labels = ["Fire", "Flood"]
+    scenarios = [s for s in SCENARIO_ORDER if s in d.scenario]
+    safe_mean = x -> (v=Float64.(collect(skipmissing(x))); isempty(v) ? missing : mean(v))
+    figures = Dict{String,Plots.Plot}()
+
+    # Figure 1: Mean hazard-dependent effective asset count.
+    count_cols = [:fire_effective_asset_count, :flood_effective_asset_count]
+    count_summary = combine(groupby(d, :scenario), [col => safe_mean => Symbol("mean_$(col)") for col in count_cols]...)
+    count_values = hcat([count_summary[count_summary.scenario .== s, :mean_fire_effective_asset_count][1] for s in scenarios], [count_summary[count_summary.scenario .== s, :mean_flood_effective_asset_count][1] for s in scenarios])
+    p1 = groupedbar(1:length(scenarios), count_values; bar_position=:dodge, orientation=:vertical, xticks=(1:length(scenarios), scenarios), ylabel="Mean effective asset count", xlabel="Deployment scenario", label=reshape(hazard_labels, 1, 2), color=reshape(hazard_colours, 1, 2), ylims=(0, max(3.5, maximum(skipmissing(vec(count_values))) * 1.1)), legend=:topright, grid=:y, size=(1800, 650), bottom_margin=10Plots.mm, left_margin=10Plots.mm)
+    hline!(p1, [3]; color=:black, linestyle=:dash, linewidth=1.5, label="Redundancy threshold (3)")
+    savefig(p1, joinpath(PLOT_PAPER_DIR, "redundancy_effective_asset_count_1_year.png"))
+    figures["effective_asset_count"] = p1
+
+    # Figure 3: Proportion of facilities achieving at least three effective assets.
+    threshold = 3.0
+    proportions = DataFrame(scenario=String[], hazard=String[], proportion=Float64[], num_facilities=Int[])
+    for scenario in scenarios, (j, hazard) in enumerate(hazards)
+        col = count_cols[j]
+        values = Float64.(collect(skipmissing(d[d.scenario .== scenario, col])))
+        isempty(values) && continue
+        push!(proportions, (scenario, hazard, mean(values .>= threshold), length(values)))
+    end
+    proportion_values = hcat([proportions[proportions.scenario .== s, :proportion][findfirst(==("fire"), proportions[proportions.scenario .== s, :hazard])] for s in scenarios], [proportions[proportions.scenario .== s, :proportion][findfirst(==("flood"), proportions[proportions.scenario .== s, :hazard])] for s in scenarios])
+    p3 = groupedbar(1:length(scenarios), proportion_values .* 100; bar_position=:dodge, xticks=(1:length(scenarios), scenarios), ylabel="threshold met (%)", xlabel="Deployment scenario", label=reshape(hazard_labels, 1, 2), color=reshape(hazard_colours, 1, 2), ylims=(0, 76), legend=:topright, grid=:y, size=(1800, 650), bottom_margin=10Plots.mm, left_margin=10Plots.mm)
+    savefig(p3, joinpath(PLOT_PAPER_DIR, "redundancy_threshold_achievement_1_year.png"))
+    figures["redundancy_threshold_achievement"] = p3
+
+    # Figure 2: Distribution of hazard-dependent redundancy risk.
+    risk_cols = [:fire_redundancy_risk, :flood_redundancy_risk]
+    p2 = plot(; xlabel="Deployment scenario", ylabel="Redundancy risk score", xticks=(1:length(scenarios), scenarios), xlims=(0.5, length(scenarios) + 0.5), ylims=(0, 1.05), legend=:bottomright, grid=:y, size=(1600, 650), bottom_margin=10Plots.mm, left_margin=8Plots.mm)
+    for (j, hazard) in enumerate(hazards)
+        col = risk_cols[j]
+        for (i, scenario) in enumerate(scenarios)
+            values = filter(isfinite, Float64.(collect(skipmissing(d[d.scenario .== scenario, col]))))
+            isempty(values) && continue
+            boxplot!(p2, fill(i + (j == 1 ? -0.16 : 0.16), length(values)), values; bar_width=0.28, color=hazard_colours[j], label=i == 1 ? hazard_labels[j] : "", outliers=true)
+        end
+    end
+    savefig(p2, joinpath(PLOT_PAPER_DIR, "redundancy_risk_distributions_1_year.png"))
+    figures["redundancy_risk_distribution"] = p2
+
+
+    @info "Saved three redundancy analysis figures" PLOT_PAPER_DIR num_facilities=nrow(d) scenarios=scenarios
+    return figures
+end
+
+"""
+    save_distance_coverage_plot(; max_distance_m=12500.0, step_m=5.0)
+Saves a plot of coverage probability versus distance from the evacuation facility to the telecom asset for each deployment scenario, with vertical lines indicating the nominal distance for each scenario.
+"""
+function save_distance_coverage_plot(; max_distance_m=12500.0, step_m=5.0)
+    distances = collect(0.0:step_m:max_distance_m)
+
+    p = plot(; xlabel="Distance from evacuation facility to telecom asset (m)", ylabel="Coverage probability", title="Distance versus coverage probability", xlims=(0, max_distance_m), xticks=0:2500:max_distance_m, xformatter=:plain, ylims=(0, 1), legend=:topright, size=(1800, 800), margin=10Plots.mm)
+
+    hline!(p, [MIN_COVERAGE_PROBABILITY]; label="Minimum candidate coverage probability", linestyle=:dot, color=:black, linewidth=1.5)
+
+    for (scenario, scenario_config) in COVERAGE_SCENARIOS
+        config = CoverageScenario(scenario, scenario_config.nominal_distance_m, scenario_config.pathloss_exponent, scenario_config.shadow_fading_std_db)
+        nominal = config.nominal_distance_m
+        probabilities = coverage_probability.(distances, Ref(config))
+        plot!(p, distances, probabilities; label=scenario, linewidth=2.75)
+        nominal <= max_distance_m && vline!(p, [nominal]; label="$(scenario) nominal distance", linestyle=:dash, alpha=0.65, linewidth=1.5)
+    end
+
+    savefig(p, joinpath(PLOT_PAPER_DIR, "distance_vs_coverage_probability.png"))
+    return p
+end
+
+function run_latex()
+    results = load_results(include_telco=true)
+    df = results.facilities
+    telco_df = results.telco_assets
+    save_geographic_risk_comparison_maps(df)
+    save_accessibility_latex_table(df)
+    save_distance_coverage_plot()
+    save_baseline_coverage_figures(df)
+    save_hazard_failure_figures((facilities=df, telco_assets=telco_df))
+    save_continuity_cutoff_figures(df)
+    save_state_risk_comparison_plots(df)
+    save_redundancy_analysis_plots(df)
+
+end
+
+run_latex()
